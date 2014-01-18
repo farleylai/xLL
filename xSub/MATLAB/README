@@ -1,0 +1,25 @@
+eXtreme Language Learning (xLL)
+BoilerMake, 2014
+Farley Lai
+
+In the matlab shell, to segment a speech in the wave format, type:
+>> main('media/F4M4', 0.5);
+
+After the segmentation, an interactive prompt query to play particular speech segments.
+>> What sentence to play(1-19)?
+>> a: all, p: prev, n: next and q: quit
+
+A subtitle F4M4.srt will be output to media/, marking the starts and lengths
+of the segmented speech sentences.
+
+Summary of source files.
+media/              sample speech recordings
+mfcc.m              the MFCC feature extraction
+gmm.m               the GMM implementation
+sdf.m               speech detection based on GMM
+rfft.m              FFT to process only real samples
+segment.m           merge adjacent silence and speech frames.
+segments.m          expose speech segments given a silence threshold.
+
+NOTE
+Undocumented files are still experimental.
