@@ -5,6 +5,7 @@
 
 package com.qualcomm.vuforia.samples.VuforiaSamples.app.TextRecognition;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -22,6 +24,7 @@ import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.Settings;
 import android.text.Layout.Alignment;
@@ -264,6 +267,15 @@ public class TextReco extends Activity implements SampleApplicationControl,
     protected void onDestroy()
     {
         Log.d(LOGTAG, "onDestroy");
+        // save DB stats
+        for(String word: mDB.keySet()) {
+        	int count = mDB.get(word);
+            Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
+            File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
+            path.delete();
+            RandomAccessFile db = new RandomAccessFile(path, "rw");  
+        }
+        
         super.onDestroy();
         
         try
@@ -419,6 +431,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     }
     
     private Map<String, String> mDictionary = new HashMap<String, String>();
+    private Map<String, Integer> mDB = new TreeMap<String, Integer>();
     
     private void loadDictionary(String path) {
     	AssetManager assetManager = getAssets();
@@ -428,7 +441,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
 			scanner.useDelimiter(":\\s|\n");
 			while(scanner.hasNext()) {
 				String word = scanner.next();
-				if(word.isEmpty()) break;
+				if(word.isEmpty() || !scanner.hasNext()) break;
 				String definition = scanner.next();
 				mDictionary.put(word, definition);
 				Log.d("TextReco", String.format("fetch %s: %s", word, definition));
@@ -440,12 +453,20 @@ public class TextReco extends Activity implements SampleApplicationControl,
     }
     
     private String lookup(String word) {
-    	String definition = mDictionary.get(word.toLowerCase());
-    	return definition == null ? "" : definition;
+    	word = word.toLowerCase();
+    	String definition = mDictionary.get(word);
+    	if(definition == null)
+    		return "";
+    	else {
+    		int count = mDB.get(word) + 1;
+    		mDB.put(word, count);
+    		return definition;
+    	}
     }
     
     void updateWordListUI(final List<WordDesc> words)
     {
+//    	Log.d(LOGTAG, words.size() + " words detected");
         runOnUiThread(new Runnable()
         {          
             public void run()
