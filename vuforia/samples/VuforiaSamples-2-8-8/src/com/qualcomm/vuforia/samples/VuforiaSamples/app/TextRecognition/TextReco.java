@@ -207,6 +207,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG, "onConfigurationChanged");
         super.onConfigurationChanged(config);
         
+        // xLL: avoid unexpected triggering
+        if(mRenderer == null) return;
+        
         vuforiaAppSession.onConfigurationChanged();
         configureVideoBackgroundROI();
     }
