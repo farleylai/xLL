@@ -123,12 +123,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
         
         // xLL: landscape mode
 //        vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        
-        mGestureDetector = new GestureDetector(this, new GestureListener());
-        
-        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
-            "droid");
+        vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);       
+        mGestureDetector = new GestureDetector(this, new GestureListener());        
+        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");        		
     }
     
     // Process Single Tap event to trigger autofocus
@@ -232,6 +229,19 @@ public class TextReco extends Activity implements SampleApplicationControl,
     protected void onPause()
     {
         Log.d(LOGTAG, "onPause");
+        // save DB stats
+        File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
+        try {
+        	PrintWriter db = new PrintWriter(path, "UTF-8");
+        	for(String word: mDB.keySet()) {
+        		int count = mDB.get(word);
+        		Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
+        		db.printf("%s\t%d\n", word, count);
+        	}
+        	db.close();
+        } catch(IOException e) {
+        	e.printStackTrace();
+        }
         super.onPause();
         
         if (mGlView != null)
@@ -269,19 +279,6 @@ public class TextReco extends Activity implements SampleApplicationControl,
     protected void onDestroy()
     {
         Log.d(LOGTAG, "onDestroy");
-        // save DB stats
-        File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
-        try {
-        	PrintWriter db = new PrintWriter(path, "UTF-8");
-        	for(String word: mDB.keySet()) {
-        		int count = mDB.get(word);
-        		Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
-        		db.printf("%s\t%d\n", word, count);
-        	}        	
-        } catch(IOException e) {
-        	e.printStackTrace();
-        }
-        
         super.onDestroy();
         
         try
@@ -455,7 +452,29 @@ public class TextReco extends Activity implements SampleApplicationControl,
 			scanner.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}        
+		}
+        
+        File filename = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
+        if(!filename.exists()) {
+        	Log.d("TextReco", path + " not exist!");
+        	return;
+        }
+        
+        try {
+        	Scanner db = new Scanner(filename, "UTF-8");
+        	db.useDelimiter("\t|\n");
+        	Log.d("TextReco", "read word stats from DB");
+        	while(db.hasNext()) {
+        		String word = db.next();
+        		if(word.isEmpty() || !db.hasNext()) break;
+        		int count = db.nextInt();
+        		mDB.put(word, count);
+        		Log.d("TextRecoDB", String.format("read %s\t%d\n", word, count));
+        	}
+        	db.close();
+        } catch(IOException e) {
+        	e.printStackTrace();
+        }
     }
     
     private String lookup(String word) {
