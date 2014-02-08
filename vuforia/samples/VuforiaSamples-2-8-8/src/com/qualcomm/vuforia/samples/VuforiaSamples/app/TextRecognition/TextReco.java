@@ -6,8 +6,11 @@
 package com.qualcomm.vuforia.samples.VuforiaSamples.app.TextRecognition;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -260,20 +263,23 @@ public class TextReco extends Activity implements SampleApplicationControl,
         
         stopCamera();
     }
-    
-    
+       
     // The final call you receive before your activity is destroyed.
     @Override
     protected void onDestroy()
     {
         Log.d(LOGTAG, "onDestroy");
         // save DB stats
-        for(String word: mDB.keySet()) {
-        	int count = mDB.get(word);
-            Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
-            File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
-            path.delete();
-            RandomAccessFile db = new RandomAccessFile(path, "rw");  
+        File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
+        try {
+        	PrintWriter db = new PrintWriter(path, "UTF-8");
+        	for(String word: mDB.keySet()) {
+        		int count = mDB.get(word);
+        		Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
+        		db.printf("%s\t%d\n", word, count);
+        	}        	
+        } catch(IOException e) {
+        	e.printStackTrace();
         }
         
         super.onDestroy();
@@ -458,7 +464,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
     	if(definition == null)
     		return "";
     	else {
-    		int count = mDB.get(word) + 1;
+    		int count = 1;
+    		if(mDB.get(word) != null)
+    			count = mDB.get(word) + 1;
     		mDB.put(word, count);
     		return definition;
     	}
