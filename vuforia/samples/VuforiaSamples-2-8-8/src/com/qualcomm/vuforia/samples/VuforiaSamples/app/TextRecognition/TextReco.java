@@ -332,7 +332,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         mGlView.setRenderer(mRenderer);
         
 //        mGlView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-        mGlView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+//        mGlView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         showLoupe(false);
         
     }
