@@ -239,7 +239,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
 				String definition = scanner.next();
 				dict.put(word, definition);
 				entries++;
-//				Log.d(TAG, String.format("fetch %s: %s", word, definition));
+				Log.d(TAG, String.format("fetch %s: %s", word, definition));
 			}
 			scanner.close();
 			Log.d(TAG, String.format("%d definition entries are loaded", entries));
