@@ -5,10 +5,10 @@
 
 package com.qualcomm.vuforia.samples.VuforiaSamples.app.TextRecognition;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
@@ -24,7 +23,6 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.provider.Settings;
 import android.text.Layout.Alignment;
@@ -72,12 +70,10 @@ import com.qualcomm.vuforia.samples.VuforiaSamples.ui.SampleAppMenu.SampleAppMen
 public class TextReco extends Activity implements SampleApplicationControl,
     SampleAppMenuInterface
 {
-    private static final String LOGTAG = "TextReco";
-    
-    SampleApplicationSession vuforiaAppSession;
-    
-    private final static int COLOR_OPAQUE = Color.argb(178, 0, 0, 0);
-    private final static int WORDLIST_MARGIN = 10;
+    private static final String TAG = "DictEye";
+    private static final int COLOR_OPAQUE = Color.argb(178, 0, 0, 0);
+    private static final int WORDLIST_MARGIN = 10;
+    private SampleApplicationSession vuforiaAppSession;    
     
     // Our OpenGL view:
     private SampleApplicationGLView mGlView;
@@ -103,7 +99,12 @@ public class TextReco extends Activity implements SampleApplicationControl,
     
     private View mFlashOptionView;
     
-    boolean mIsDroidDevice = false;
+    private boolean mIsDroidDevice = false;
+    
+    private Map<String, String> mDictionary = new HashMap<String, String>();
+    private Map<String, Integer> mDB = new TreeMap<String, Integer>();
+    
+
     
     
     // Called when the activity first starts or the user navigates back to an
@@ -111,7 +112,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        Log.d(LOGTAG, "onCreate");
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         
         vuforiaAppSession = new SampleApplicationSession(this);
@@ -166,7 +167,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     @Override
     protected void onResume()
     {
-        Log.d(LOGTAG, "onResume");
+        Log.d(TAG, "onResume");
         super.onResume();
         
         // This is needed for some Droid devices to force portrait
@@ -181,7 +182,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
             vuforiaAppSession.resumeAR();
         } catch (SampleApplicationException e)
         {
-            Log.e(LOGTAG, e.getString());
+            Log.e(TAG, e.getString());
         }
         
         if (mIsVuforiaStarted)
@@ -201,7 +202,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     @Override
     public void onConfigurationChanged(Configuration config)
     {
-        Log.d(LOGTAG, "onConfigurationChanged");
+        Log.d(TAG, "onConfigurationChanged");
         super.onConfigurationChanged(config);
         
         // xLL: avoid unexpected triggering
@@ -222,23 +223,83 @@ public class TextReco extends Activity implements SampleApplicationControl,
         return mGestureDetector.onTouchEvent(event);
     }
     
+    private void loadDictionary(String path) {
+    	AssetManager assetManager = getAssets();
+        try {
+			InputStream in = assetManager.open(path);
+			Scanner scanner = new Scanner(in, "UTF-8");
+			scanner.useDelimiter(":\\s|\n");
+			int entries = 0;
+			while(scanner.hasNext()) {
+				String word = scanner.next();
+				if(word.isEmpty() || !scanner.hasNext()) break;
+				String definition = scanner.next();
+				mDictionary.put(word, definition);
+				entries++;
+//				Log.d(TAG, String.format("fetch %s: %s", word, definition));
+			}
+			scanner.close();
+			Log.d(TAG, String.format("%d definition entries are loaded", entries));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    private String lookup(String word) {
+    	word = word.toLowerCase();
+    	String definition = mDictionary.get(word);
+    	if(definition == null)
+    		return "";
+    	else {
+    		int count = 1;
+    		if(mDB.get(word) != null)
+    			count = mDB.get(word) + 1;
+    		mDB.put(word, count);
+    		return definition;
+    	}
+    }
+    
+    private void loadDB() {
+		try {
+			Scanner db = new Scanner(openFileInput("DictEye.db"), "UTF-8");
+			db.useDelimiter("\t|\n");
+	    	int entries = 0;
+	    	while(db.hasNext()) {
+	    		String word = db.next();
+	    		if(word.isEmpty() || !db.hasNext()) break;
+	    		int count = db.nextInt();
+	    		mDB.put(word, count);
+	    		entries++;
+//	    		Log.d(TAG, String.format("read %s\t%d", word, count));
+	    	}
+	    	db.close();
+    		Log.d(TAG, String.format("loaded %d word stats entries from DB", entries));
+		} catch (FileNotFoundException e) {
+			Log.d(TAG, e.getMessage());
+		}
+    	
+    }
+    
+    private void saveDB() throws IOException {
+    	int entries = 0;
+    	OutputStreamWriter db = new OutputStreamWriter(openFileOutput("DictEye.db", MODE_PRIVATE), "UTF-8");
+    	for(String word: mDB.keySet()) {
+    		int count = mDB.get(word);
+    		db.append(String.format("%s\t%d\n", word, count));
+    		entries++;
+//    		Log.d(TAG, String.format("%s: lookup for %d times", word, count));
+    	}
+    	db.close();
+    	Log.d(TAG, String.format("saved %d word stats entries to DB", entries));
+    }
     
     // Called when the system is about to start resuming a previous activity.
-    @SuppressLint("NewApi")
 	@Override
     protected void onPause()
     {
-        Log.d(LOGTAG, "onPause");
-        // save DB stats
-        File path = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
+        Log.d(TAG, "onPause");
         try {
-        	PrintWriter db = new PrintWriter(path, "UTF-8");
-        	for(String word: mDB.keySet()) {
-        		int count = mDB.get(word);
-        		Log.d(LOGTAG, String.format("%s: lookup for %d times", word, count));
-        		db.printf("%s\t%d\n", word, count);
-        	}
-        	db.close();
+        	saveDB();
         } catch(IOException e) {
         	e.printStackTrace();
         }
@@ -268,7 +329,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
             vuforiaAppSession.pauseAR();
         } catch (SampleApplicationException e)
         {
-            Log.e(LOGTAG, e.getString());
+            Log.e(TAG, e.getString());
         }
         
         stopCamera();
@@ -278,7 +339,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     @Override
     protected void onDestroy()
     {
-        Log.d(LOGTAG, "onDestroy");
+        Log.d(TAG, "onDestroy");
         super.onDestroy();
         
         try
@@ -286,12 +347,11 @@ public class TextReco extends Activity implements SampleApplicationControl,
             vuforiaAppSession.stopAR();
         } catch (SampleApplicationException e)
         {
-            Log.e(LOGTAG, e.getString());
+            Log.e(TAG, e.getString());
         }
         
         System.gc();
-    }
-    
+    }    
     
     private void startLoadingAnimation()
     {
@@ -432,65 +492,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         CameraDevice.getInstance().stop();
         CameraDevice.getInstance().deinit();
     }
-    
-    private Map<String, String> mDictionary = new HashMap<String, String>();
-    private Map<String, Integer> mDB = new TreeMap<String, Integer>();
-    
-    private void loadDictionary(String path) {
-    	AssetManager assetManager = getAssets();
-        try {
-			InputStream in = assetManager.open(path);
-			Scanner scanner = new Scanner(in, "UTF-8");
-			scanner.useDelimiter(":\\s|\n");
-			while(scanner.hasNext()) {
-				String word = scanner.next();
-				if(word.isEmpty() || !scanner.hasNext()) break;
-				String definition = scanner.next();
-				mDictionary.put(word, definition);
-				Log.d("TextReco", String.format("fetch %s: %s", word, definition));
-			}
-			scanner.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
         
-        File filename = new File(Environment.getExternalStorageDirectory(), "DictEye.db");
-        if(!filename.exists()) {
-        	Log.d("TextReco", path + " not exist!");
-        	return;
-        }
-        
-        try {
-        	Scanner db = new Scanner(filename, "UTF-8");
-        	db.useDelimiter("\t|\n");
-        	Log.d("TextReco", "read word stats from DB");
-        	while(db.hasNext()) {
-        		String word = db.next();
-        		if(word.isEmpty() || !db.hasNext()) break;
-        		int count = db.nextInt();
-        		mDB.put(word, count);
-        		Log.d("TextRecoDB", String.format("read %s\t%d\n", word, count));
-        	}
-        	db.close();
-        } catch(IOException e) {
-        	e.printStackTrace();
-        }
-    }
-    
-    private String lookup(String word) {
-    	word = word.toLowerCase();
-    	String definition = mDictionary.get(word);
-    	if(definition == null)
-    		return "";
-    	else {
-    		int count = 1;
-    		if(mDB.get(word) != null)
-    			count = mDB.get(word) + 1;
-    		mDB.put(word, count);
-    		return definition;
-    	}
-    }
-    
     void updateWordListUI(final List<WordDesc> words)
     {
 //    	Log.d(LOGTAG, words.size() + " words detected");
@@ -748,7 +750,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
                 vuforiaAppSession.startAR(CameraDevice.CAMERA.CAMERA_DEFAULT);
             } catch (SampleApplicationException e)
             {
-                Log.e(LOGTAG, e.getString());
+                Log.e(TAG, e.getString());
             }
             
             mIsVuforiaStarted = true;
@@ -762,7 +764,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
             
         } else
         {
-            Log.e(LOGTAG, exception.getString());
+            Log.e(TAG, exception.getString());
             finish();
         }
     }
@@ -783,6 +785,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         wl.loadFilterList("TextReco/FilterList.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.setFilterMode(WordList.FILTER_MODE.FILTER_MODE_WHITE_LIST);
         loadDictionary("TextReco/dict.lst");
+        loadDB();
         return ret;
     }
     
@@ -821,12 +824,12 @@ public class TextReco extends Activity implements SampleApplicationControl,
         if (tracker == null)
         {
             Log.e(
-                LOGTAG,
+                TAG,
                 "Tracker not initialized. Tracker already initialized or the camera is already started");
             result = false;
         } else
         {
-            Log.i(LOGTAG, "Tracker successfully initialized");
+            Log.i(TAG, "Tracker successfully initialized");
         }
         
         return result;
@@ -868,7 +871,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     {
         // Indicate if the trackers were deinitialized correctly
         boolean result = true;
-        Log.e(LOGTAG, "UnloadTrackersData");
+        Log.e(TAG, "UnloadTrackersData");
         
         TrackerManager tManager = TrackerManager.getInstance();
         tManager.deinitTracker(TextTracker.getClassType());
@@ -927,7 +930,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
                 {
                     showToast(getString(mFlash ? R.string.menu_flash_error_off
                         : R.string.menu_flash_error_on));
-                    Log.e(LOGTAG,
+                    Log.e(TAG,
                         getString(mFlash ? R.string.menu_flash_error_off
                             : R.string.menu_flash_error_on));
                 }
