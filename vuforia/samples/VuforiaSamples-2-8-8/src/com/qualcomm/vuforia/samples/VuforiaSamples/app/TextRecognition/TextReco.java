@@ -380,8 +380,8 @@ public class TextReco extends Activity implements SampleApplicationControl,
             // loupe height is :
             // 15% of the screen height for a phone
             // 10% of the screen height for a tablet
-            int loupeHeight = mIsTablet ? (screenHeight * 10) / 100
-                : (screenHeight * 15) / 100;
+            int loupeHeight = mIsTablet ? (screenHeight * 20) / 100
+                : (screenHeight * 30) / 100;
             
             // lupue width takes the width of the screen minus 2 margins
             int loupeWidth = screenWidth - (2 * marginWidth);
@@ -580,7 +580,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         // loupe height is :
         // 33% of the screen height for a phone
         // 20% of the screen height for a tablet
-        int loupeHeight = mIsTablet ? (height * 10) / 100 : (height * 15) / 100;
+        int loupeHeight = mIsTablet ? (height * 20) / 100 : (height * 30) / 100;
         
         // lupue width takes the width of the screen minus 2 margins
         int loupeWidth = width - (2 * marginWidth);
