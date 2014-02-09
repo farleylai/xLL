@@ -17,6 +17,7 @@ import java.util.Scanner;
 import java.util.TreeMap;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
@@ -259,38 +260,35 @@ public class TextReco extends Activity implements SampleApplicationControl,
     	}
     }
     
-    private void loadDB() {
+    public static void loadDB(Context ctx, Map<String, Integer> DB) {
 		try {
-			Scanner db = new Scanner(openFileInput("DictEye.db"), "UTF-8");
+			Scanner db = new Scanner(ctx.openFileInput("DictEye.db"), "UTF-8");
 			db.useDelimiter("\t|\n");
-	    	int entries = 0;
+	    	DB.clear();
 	    	while(db.hasNext()) {
 	    		String word = db.next();
 	    		if(word.isEmpty() || !db.hasNext()) break;
 	    		int count = db.nextInt();
-	    		mDB.put(word, count);
-	    		entries++;
+	    		DB.put(word, count);
 //	    		Log.d(TAG, String.format("read %s\t%d", word, count));
 	    	}
 	    	db.close();
-    		Log.d(TAG, String.format("loaded %d word stats entries from DB", entries));
+    		Log.d(TAG, String.format("loaded %d word stats entries from DB", DB.size()));
 		} catch (FileNotFoundException e) {
 			Log.d(TAG, e.getMessage());
 		}
     	
     }
     
-    private void saveDB() throws IOException {
-    	int entries = 0;
-    	OutputStreamWriter db = new OutputStreamWriter(openFileOutput("DictEye.db", MODE_PRIVATE), "UTF-8");
-    	for(String word: mDB.keySet()) {
-    		int count = mDB.get(word);
+    public static void saveDB(Context ctx, Map<String, Integer> DB) throws IOException {
+    	OutputStreamWriter db = new OutputStreamWriter(ctx.openFileOutput("DictEye.db", MODE_PRIVATE), "UTF-8");
+    	for(String word: DB.keySet()) {
+    		int count = DB.get(word);
     		db.append(String.format("%s\t%d\n", word, count));
-    		entries++;
 //    		Log.d(TAG, String.format("%s: lookup for %d times", word, count));
     	}
     	db.close();
-    	Log.d(TAG, String.format("saved %d word stats entries to DB", entries));
+    	Log.d(TAG, String.format("saved %d word stats entries to DB", DB.size()));
     }
     
     // Called when the system is about to start resuming a previous activity.
@@ -299,7 +297,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     {
         Log.d(TAG, "onPause");
         try {
-        	saveDB();
+        	saveDB(this, mDB);
         } catch(IOException e) {
         	e.printStackTrace();
         }
@@ -785,7 +783,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         wl.loadFilterList("TextReco/FilterList.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.setFilterMode(WordList.FILTER_MODE.FILTER_MODE_WHITE_LIST);
         loadDictionary("TextReco/dict.lst");
-        loadDB();
+        loadDB(this, mDB);
         return ret;
     }
     
