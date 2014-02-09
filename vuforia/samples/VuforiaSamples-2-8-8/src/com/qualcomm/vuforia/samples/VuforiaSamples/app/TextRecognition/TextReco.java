@@ -115,9 +115,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     {
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
-        
-        vuforiaAppSession = new SampleApplicationSession(this);
-        
+        vuforiaAppSession = new SampleApplicationSession(this);        
         startLoadingAnimation();
         
         // xLL: landscape mode
@@ -224,10 +222,10 @@ public class TextReco extends Activity implements SampleApplicationControl,
         return mGestureDetector.onTouchEvent(event);
     }
     
-    private void loadDictionary(String path) {
-    	AssetManager assetManager = getAssets();
+    public static void loadDictionary(Context ctx, Map<String, String> dict) {
+    	AssetManager assetManager = ctx.getAssets();
         try {
-			InputStream in = assetManager.open(path);
+			InputStream in = assetManager.open("TextReco/dict.lst");
 			Scanner scanner = new Scanner(in, "UTF-8");
 			scanner.useDelimiter(":\\s|\n");
 			int entries = 0;
@@ -235,7 +233,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
 				String word = scanner.next();
 				if(word.isEmpty() || !scanner.hasNext()) break;
 				String definition = scanner.next();
-				mDictionary.put(word, definition);
+				dict.put(word, definition);
 				entries++;
 //				Log.d(TAG, String.format("fetch %s: %s", word, definition));
 			}
@@ -782,7 +780,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         wl.addWordsFromFile("TextReco/AdditionalWords.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.loadFilterList("TextReco/FilterList.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.setFilterMode(WordList.FILTER_MODE.FILTER_MODE_WHITE_LIST);
-        loadDictionary("TextReco/dict.lst");
+        loadDictionary(this, mDictionary);
         loadDB(this, mDB);
         return ret;
     }

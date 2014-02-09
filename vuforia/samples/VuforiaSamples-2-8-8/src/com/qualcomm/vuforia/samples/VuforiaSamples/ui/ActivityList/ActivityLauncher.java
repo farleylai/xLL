@@ -55,7 +55,7 @@ public class ActivityLauncher extends ListActivity
         	intent.putExtra("ABOUT_TEXT", "TextReco/TR_about.html");
         	break;
         case 1:
-        	intent.putExtra("ACTIVITY_TO_LAUNCH", "edu.uiowa.cs.xll.Flashcard");
+        	intent.putExtra("ACTIVITY_TO_LAUNCH", "app.Flashcard.FlashcardActivity");
         	intent.putExtra("ABOUT_TEXT", "xLL/xLL_about.html");
         	break;
         }
