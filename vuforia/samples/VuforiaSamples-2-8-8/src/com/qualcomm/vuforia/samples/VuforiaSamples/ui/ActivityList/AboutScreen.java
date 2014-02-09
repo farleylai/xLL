@@ -51,10 +51,9 @@ public class AboutScreen extends Activity implements OnClickListener
         String webText = extras.getString("ABOUT_TEXT");
         mClassToLaunchPackage = getPackageName();
         mClassToLaunch = mClassToLaunchPackage + "."
-            + extras.getString("ACTIVITY_TO_LAUNCH");
+        		+ extras.getString("ACTIVITY_TO_LAUNCH");
         
-        mAboutWebText = (WebView) findViewById(R.id.about_html_text);
-        
+        mAboutWebText = (WebView) findViewById(R.id.about_html_text);        
         String aboutText = "";
         try
         {
