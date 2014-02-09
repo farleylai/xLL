@@ -4,7 +4,6 @@
 	<classpathentry exported="true" kind="var" path="QCAR_SDK_ROOT/build/java/vuforia/Vuforia.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="G:/boilermake/xLL/vuforia/build/java/vuforia/Vuforia.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="output" path="bin/classes"/>

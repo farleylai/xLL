@@ -96,8 +96,10 @@ public class TextReco extends Activity implements SampleApplicationControl,
     
     private GestureDetector mGestureDetector;
     
+    private boolean mAdvanced = true;
     private boolean mFlash = false;
-    
+
+    private View mLevelOptionView;
     private View mFlashOptionView;
     
     private boolean mIsDroidDevice = false;
@@ -122,7 +124,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
 //        vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);       
         mGestureDetector = new GestureDetector(this, new GestureListener());        
-        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");        		
+        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");
+        loadDictionary(this, mDictionary);
+        loadDB(this, mDB);
     }
     
     // Process Single Tap event to trigger autofocus
@@ -308,23 +312,17 @@ public class TextReco extends Activity implements SampleApplicationControl,
         }
         
         // Turn off the flash
-        if (mFlashOptionView != null && mFlash)
-        {
+        if (mFlashOptionView != null && mFlash) {
             // OnCheckedChangeListener is called upon changing the checked state
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-            {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)           
                 ((Switch) mFlashOptionView).setChecked(false);
-            } else
-            {
+            else            
                 ((CheckBox) mFlashOptionView).setChecked(false);
-            }
         }
         
-        try
-        {
+        try {
             vuforiaAppSession.pauseAR();
-        } catch (SampleApplicationException e)
-        {
+        } catch (SampleApplicationException e) {
             Log.e(TAG, e.getString());
         }
         
@@ -338,11 +336,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
         Log.d(TAG, "onDestroy");
         super.onDestroy();
         
-        try
-        {
+        try {
             vuforiaAppSession.stopAR();
-        } catch (SampleApplicationException e)
-        {
+        } catch (SampleApplicationException e) {
             Log.e(TAG, e.getString());
         }
         
@@ -771,17 +767,15 @@ public class TextReco extends Activity implements SampleApplicationControl,
     public boolean doLoadTrackersData()
     {
         TrackerManager tm = TrackerManager.getInstance();
-        TextTracker tt = (TextTracker) tm
-            .getTracker(TextTracker.getClassType());
+        TextTracker tt = (TextTracker) tm.getTracker(TextTracker.getClassType());
         WordList wl = tt.getWordList();
         
         // xLL: filter words of interest
         boolean ret = wl.loadWordList("TextReco/Vuforia-English-word.vwl", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.addWordsFromFile("TextReco/AdditionalWords.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
-        wl.loadFilterList("TextReco/FilterList.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
+        wl.loadFilterList(mAdvanced ? "TextReco/FilterListAdvanced.lst" : "TextReco/FilterList.lst", WordList.STORAGE_TYPE.STORAGE_APPRESOURCE);
         wl.setFilterMode(WordList.FILTER_MODE.FILTER_MODE_WHITE_LIST);
-        loadDictionary(this, mDictionary);
-        loadDB(this, mDB);
+        Log.i(TAG, mAdvanced ? "advanced filter list applied" : "filter list applied");
         return ret;
     }
     
@@ -792,11 +786,9 @@ public class TextReco extends Activity implements SampleApplicationControl,
         // Indicate if the trackers were unloaded correctly
         boolean result = true;
         TrackerManager tm = TrackerManager.getInstance();
-        TextTracker tt = (TextTracker) tm
-            .getTracker(TextTracker.getClassType());
+        TextTracker tt = (TextTracker) tm.getTracker(TextTracker.getClassType());
         WordList wl = tt.getWordList();
-        wl.unloadAllLists();
-        
+        wl.unloadAllLists();        
         return result;
     }
     
@@ -851,8 +843,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
     public boolean doStopTrackers()
     {
         // Indicate if the trackers were stopped correctly
-        boolean result = true;
-        
+        boolean result = true;      
         Tracker textTracker = TrackerManager.getInstance().getTracker(
             TextTracker.getClassType());
         if (textTracker != null)
@@ -866,16 +857,15 @@ public class TextReco extends Activity implements SampleApplicationControl,
     public boolean doDeinitTrackers()
     {
         // Indicate if the trackers were deinitialized correctly
-        boolean result = true;
-        Log.e(TAG, "UnloadTrackersData");
-        
+        boolean result = true;          
         TrackerManager tManager = TrackerManager.getInstance();
         tManager.deinitTracker(TextTracker.getClassType());
-        
+        Log.e(TAG, "UnloadTrackersData");   
         return result;
     }
     
     final public static int CMD_BACK = -1;
+    final public static int CMD_LEVEL = 0;
     final public static int CMD_FLASH = 1;
     
     
@@ -892,15 +882,13 @@ public class TextReco extends Activity implements SampleApplicationControl,
     // This method sets the menu's settings
     private void setSampleAppMenuSettings()
     {
-        SampleAppMenuGroup group;
-        
+        SampleAppMenuGroup group;       
         group = mSampleAppMenu.addGroup("", false);
-        group.addTextItem(getString(R.string.menu_back), -1);
-        
+        group.addTextItem(getString(R.string.menu_back), -1);   
         group = mSampleAppMenu.addGroup("", true);
-        mFlashOptionView = group.addSelectionItem(
-            getString(R.string.menu_flash), CMD_FLASH, false);
-        
+        mLevelOptionView = group.addSelectionItem("Advanced Level", CMD_LEVEL, true);
+        group = mSampleAppMenu.addGroup("", true);
+        mFlashOptionView = group.addSelectionItem(getString(R.string.menu_flash), CMD_FLASH, false);       
         mSampleAppMenu.attachMenu();
     }
     
@@ -908,22 +896,23 @@ public class TextReco extends Activity implements SampleApplicationControl,
     @Override
     public boolean menuProcess(int command)
     {
-        boolean result = true;
-        
+        boolean result = true;       
         switch (command)
         {
             case CMD_BACK:
-                finish();
-                break;
-            
-            case CMD_FLASH:
-                result = CameraDevice.getInstance().setFlashTorchMode(!mFlash);
-                
+                finish(); break;
+            case CMD_LEVEL: {
+                mAdvanced = !mAdvanced;
+                doStopTrackers();
+                doUnloadTrackersData();
+                doLoadTrackersData();
+                doStartTrackers();
+            	break;
+            } case CMD_FLASH:
+                result = CameraDevice.getInstance().setFlashTorchMode(!mFlash);              
                 if (result)
-                {
                     mFlash = !mFlash;
-                } else
-                {
+                else {
                     showToast(getString(mFlash ? R.string.menu_flash_error_off
                         : R.string.menu_flash_error_on));
                     Log.e(TAG,
