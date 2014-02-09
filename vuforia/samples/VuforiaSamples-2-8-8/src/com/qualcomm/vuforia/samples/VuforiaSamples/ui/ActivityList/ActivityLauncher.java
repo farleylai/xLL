@@ -21,9 +21,11 @@ import com.qualcomm.vuforia.samples.VuforiaSamples.R;
 public class ActivityLauncher extends ListActivity
 {
     
-    private String mActivities[] = { "Image Targets", "Cylinder Targets",
-            "Multi Targets", "User Defined Targets", "Cloud Reco", "Text Reco",
-            "Frame Markers", "Virtual Buttons" };
+//    private String mActivities[] = { "Image Targets", "Cylinder Targets",
+//            "Multi Targets", "User Defined Targets", "Cloud Reco", "Text Reco",
+//            "Frame Markers", "Virtual Buttons" };
+    
+    private String mActivities[] = { "Dict Eye", "Flashcards" };
     
     
     @Override
@@ -44,55 +46,64 @@ public class ActivityLauncher extends ListActivity
     
     @Override
     public void onListItemClick(ListView l, View v, int position, long id)
-    {
-        
+    {        
         Intent intent = new Intent(this, AboutScreen.class);
-        intent.putExtra("ABOUT_TEXT_TITLE", mActivities[position]);
-        
-        switch (position)
-        {
-            case 0:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.ImageTargets.ImageTargets");
-                intent.putExtra("ABOUT_TEXT", "ImageTargets/IT_about.html");
-                break;
-            case 1:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.CylinderTargets.CylinderTargets");
-                intent.putExtra("ABOUT_TEXT", "CylinderTargets/CY_about.html");
-                break;
-            case 2:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.MultiTargets.MultiTargets");
-                intent.putExtra("ABOUT_TEXT", "MultiTargets/MT_about.html");
-                break;
-            case 3:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.UserDefinedTargets.UserDefinedTargets");
-                intent.putExtra("ABOUT_TEXT",
-                    "UserDefinedTargets/UD_about.html");
-                break;
-            case 4:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.CloudRecognition.CloudReco");
-                intent.putExtra("ABOUT_TEXT", "CloudReco/CR_about.html");
-                break;
-            case 5:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.TextRecognition.TextReco");
-                intent.putExtra("ABOUT_TEXT", "TextReco/TR_about.html");
-                break;
-            case 6:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.FrameMarkers.FrameMarkers");
-                intent.putExtra("ABOUT_TEXT", "FrameMarkers/FM_about.html");
-                break;
-            case 7:
-                intent.putExtra("ACTIVITY_TO_LAUNCH",
-                    "app.VirtualButtons.VirtualButtons");
-                intent.putExtra("ABOUT_TEXT", "VirtualButtons/VB_about.html");
-                break;
+        intent.putExtra("ABOUT_TEXT_TITLE", mActivities[position]);        
+        switch (position) {
+        case 0:
+        	intent.putExtra("ACTIVITY_TO_LAUNCH", "app.TextRecognition.TextReco");
+        	intent.putExtra("ABOUT_TEXT", "TextReco/TR_about.html");
+        	break;
+        case 1:
+        	intent.putExtra("ACTIVITY_TO_LAUNCH", "edu.uiowa.cs.xll.Flashcard");
+        	intent.putExtra("ABOUT_TEXT", "xLL/xLL_about.html");
+        	break;
         }
+        
+//        switch (position)
+//        {
+//            case 0:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.ImageTargets.ImageTargets");
+//                intent.putExtra("ABOUT_TEXT", "ImageTargets/IT_about.html");
+//                break;
+//            case 1:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.CylinderTargets.CylinderTargets");
+//                intent.putExtra("ABOUT_TEXT", "CylinderTargets/CY_about.html");
+//                break;
+//            case 2:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.MultiTargets.MultiTargets");
+//                intent.putExtra("ABOUT_TEXT", "MultiTargets/MT_about.html");
+//                break;
+//            case 3:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.UserDefinedTargets.UserDefinedTargets");
+//                intent.putExtra("ABOUT_TEXT",
+//                    "UserDefinedTargets/UD_about.html");
+//                break;
+//            case 4:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.CloudRecognition.CloudReco");
+//                intent.putExtra("ABOUT_TEXT", "CloudReco/CR_about.html");
+//                break;
+//            case 5:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.TextRecognition.TextReco");
+//                intent.putExtra("ABOUT_TEXT", "TextReco/TR_about.html");
+//                break;
+//            case 6:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.FrameMarkers.FrameMarkers");
+//                intent.putExtra("ABOUT_TEXT", "FrameMarkers/FM_about.html");
+//                break;
+//            case 7:
+//                intent.putExtra("ACTIVITY_TO_LAUNCH",
+//                    "app.VirtualButtons.VirtualButtons");
+//                intent.putExtra("ABOUT_TEXT", "VirtualButtons/VB_about.html");
+//                break;
+//        }
         
         startActivity(intent);
     }
