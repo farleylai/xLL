@@ -6,11 +6,9 @@
 package com.qualcomm.vuforia.samples.VuforiaSamples.app.TextRecognition;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +22,6 @@ import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -759,7 +756,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
             postStartCamera();
             
             setSampleAppMenuAdditionalViews();
-            mSampleAppMenu = new SampleAppMenu(this, this, "Text Reco",
+            mSampleAppMenu = new SampleAppMenu(this, this, "xLL",
                 mGlView, mUILayout, mSettingsAdditionalViews);
             setSampleAppMenuSettings();
             
